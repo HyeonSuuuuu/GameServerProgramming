@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lve_pipeline.hpp"
-#include "lve_game_object.hpp"
+#include "lve_components.hpp"
 #include "lve_device.hpp"
 
 #include <memory>
@@ -15,7 +15,7 @@ namespace lve
 		alignas(16) glm::vec3 color;
 	};
 
-	class SimpleRenderSystem {
+	class SimpleRenderSystem : public System {
 	public:
 
 		SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass);
@@ -24,7 +24,7 @@ namespace lve
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
-		void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LveGameObject>& gameObjects);
+		void renderEntities(VkCommandBuffer commandBuffer, Coordinator& coordinator);
 
 
 	private:

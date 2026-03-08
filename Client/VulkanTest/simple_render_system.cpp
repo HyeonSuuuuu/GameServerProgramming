@@ -56,22 +56,24 @@ namespace lve
 			pipelineConfig);
 	}
 
-	void SimpleRenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LveGameObject>& gameObjects)
+	void SimpleRenderSystem::renderEntities(VkCommandBuffer commandBuffer, Coordinator& coordinator)
 	{
-		// update
-		int i = 0;
-		for (auto& obj : gameObjects) {
-			i += 1;
-			obj.transform2d.rotation = glm::mod<float>(obj.transform2d.rotation + 0.001f * i, 2.f * glm::pi<float>());
-		}
-
 		lvePipeline->bind(commandBuffer);
 
-		for (auto& obj : gameObjects) {
+		for (Entity entity : mEntities) {
+			auto& renderComp = coordinator.GetComponent<RenderComponent>(entity);
+			auto& transformComp = coordinator.GetComponent<Transform2dComponent>(entity);
+
 			SimplePushConstantData push{};
-			push.offset = obj.transform2d.translation;
-			push.color = obj.color;
-			push.transform = obj.transform2d.mat2();
+			push.offset = transformComp.translation;
+			push.color = renderComp.color;
+
+			const float s = glm::sin(transformComp.rotation);
+			const float c = glm::cos(transformComp.rotation);
+			glm::mat2 rotMatrix{ {c, s}, {-s, c} };
+			glm::mat2 scaleMat{ {transformComp.scale.x, 0.f}, {0.f, transformComp.scale.y} };
+			
+			push.transform = rotMatrix * scaleMat;
 
 			vkCmdPushConstants(
 				commandBuffer,
@@ -80,8 +82,9 @@ namespace lve
 				0,
 				sizeof(SimplePushConstantData),
 				&push);
-			obj.model->bind(commandBuffer);
-			obj.model->draw(commandBuffer);
+				
+			renderComp.model->bind(commandBuffer);
+			renderComp.model->draw(commandBuffer);
 		}
 	}
 }
