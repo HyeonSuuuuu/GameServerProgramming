@@ -17,6 +17,8 @@
 #include <chrono>
 #include <cassert>
 
+// Vulkan Game Engine Tutorial 참고
+
 namespace lve
 {
 	
