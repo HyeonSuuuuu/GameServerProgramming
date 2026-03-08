@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{03da65f7-2855-447f-b6c6-535e67ab7e09}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="chess_app.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_window.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_device.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_swap_chain.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_pipeline.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_model.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="lve_renderer.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="simple_render_system.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="chess_app.hpp">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_window.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_device.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_swap_chain.hpp">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_pipeline.hpp">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_model.hpp">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_game_object.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="lve_renderer.hpp">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="simple_render_system.hpp">
+      <Filter>Render</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="compile.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders\simple_shader.vert">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shaders\simple_shader.frag">
+      <Filter>Shaders</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
