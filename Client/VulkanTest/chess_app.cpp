@@ -1,22 +1,8 @@
-
+#include "pch.h"
 #include "chess_app.hpp"
 #include "simple_render_system.hpp"
 #include "keyboard_movement_controller.hpp"
 #include "lve_utils.hpp"
-
-// libs
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <GLM/gtc/constants.hpp>
-
-// std
-#include <array>
-#include <stdexcept>
-#include <iostream>
-#include <chrono>
-#include <cassert>
-
 // Vulkan Game Engine Tutorial 참고
 
 namespace lve
@@ -27,6 +13,7 @@ namespace lve
 		coordinator.RegisterComponent<Transform2dComponent>();
 		coordinator.RegisterComponent<RenderComponent>();
 		coordinator.RegisterComponent<PlayerInputComponent>();
+		coordinator.RegisterComponent<GridPositionComponent>();
 
 		simpleRenderSystem = coordinator.RegisterSystem<SimpleRenderSystem>(lveDevice, lveRenderer.getSwapChainRenderPass());
 		{
@@ -62,7 +49,7 @@ namespace lve
 			// 플레이어 엔티티(마커가 있는 엔티티) 이동
 			float tileStepY = 2.0f / 8.0f;
 			float tileStepX = tileStepY * (static_cast<float>(HEIGHT) / WIDTH);
-			playerController->moveDiscreteXY(lveWindow.getGLFWwindow(), coordinator, tileStepX, tileStepY);
+			playerController->moveDiscreteXY(lveWindow.getGLFWwindow(), coordinator, chessBoard.get());
 
 			if (auto commandBuffer = lveRenderer.beginFrame())
 			{
@@ -128,38 +115,19 @@ namespace lve
 		std::shared_ptr<LveModel> squareModel = createSquareModel(lveDevice);
 		std::shared_ptr<LveModel> pawnModel = createPawnModel(lveDevice);
 
-		assert(WIDTH > HEIGHT && " WIDTH 가 더 커야 타일이 안찌그러짐");
-		float tileScaleY = 2.0f / 8.0f; // -1 ~ 1 
-		float tileScaleX = tileScaleY * (static_cast<float>(HEIGHT) / WIDTH);
+		// Board
+		chessBoard = std::make_unique<Board>(coordinator, squareModel, WIDTH, HEIGHT);
 
-		float startY = -1.0f + (tileScaleY / 2.0f);
-		float startX = -(tileScaleX * 8.0f / 2.0f) + (tileScaleX / 2.0f);
-
-		for (int row = 0; row < 8; row++) {
-			for (int col = 0; col < 8; col++) {
-				Entity tile = coordinator.CreateEntity();
-
-				coordinator.AddComponent(tile, Transform2dComponent{
-					{ startX + col * tileScaleX, startY + row * tileScaleY },
-					{ tileScaleX, tileScaleY },
-					0.f
-				});
-				
-				glm::vec3 color = ((row + col) % 2 == 0) ? hexToColor(0xE6E6E6) : hexToColor(0xB6876B);
-				coordinator.AddComponent(tile, RenderComponent{ squareModel, color });
-			}
-		}
-
-		Entity piece = coordinator.CreateEntity();
-
-		coordinator.AddComponent(piece, Transform2dComponent{
-			{ startX + 0 * tileScaleX, startY + 0 * tileScaleY },
-			{ tileScaleX * 0.8f, tileScaleY * 0.8f },
+		// piece - player
+		Entity player = coordinator.CreateEntity();
+		coordinator.AddComponent(player, GridPositionComponent{ 4, 0 });
+		coordinator.AddComponent(player, Transform2dComponent{
+			chessBoard->getTilePosition(4, 0),
+			chessBoard->GetTileScale() * 0.8f,
 			0.f
 		});
-		coordinator.AddComponent(piece, RenderComponent{ pawnModel, hexToColor(0x000000)});
+		coordinator.AddComponent(player , RenderComponent{ pawnModel, hexToColor(0x000000) });
 		
-		// 플레이어라는 의미의 마커(marker) 역할을 하는 빈 컴포넌트 추가
-		coordinator.AddComponent(piece, PlayerInputComponent{});
+		coordinator.AddComponent(player, PlayerInputComponent{});
 	}
 }

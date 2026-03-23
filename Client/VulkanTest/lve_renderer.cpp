@@ -1,9 +1,5 @@
-
+#include "pch.h"
 #include "lve_renderer.hpp"
-
-#include <array>
-#include <stdexcept>
-#include <iostream>
 
 namespace lve
 {	

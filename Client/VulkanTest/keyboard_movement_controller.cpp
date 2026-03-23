@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "keyboard_movement_controller.hpp"
+#include "Board.hpp"
 
 namespace lve {
 	void KeyboardMovementController::moveInPlaneXY(GLFWwindow* window, float dt, Coordinator& coordinator)
@@ -23,37 +25,44 @@ namespace lve {
 		}
 	}
 
-	void KeyboardMovementController::moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, float stepX, float stepY) {
-		bool isLeftPressed = glfwGetKey(window, keys.moveLeft) == GLFW_PRESS;
-		bool isRightPressed = glfwGetKey(window, keys.moveRight) == GLFW_PRESS;
-		bool isUpPressed = glfwGetKey(window, keys.moveUp) == GLFW_PRESS;
-		bool isDownPressed = glfwGetKey(window, keys.moveDown) == GLFW_PRESS;
+	void KeyboardMovementController::moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard)
+	{
+		bool isLeft = glfwGetKey(window, keys.moveLeft) == GLFW_PRESS;
+		bool isRight = glfwGetKey(window, keys.moveRight) == GLFW_PRESS;
+		bool isUp = glfwGetKey(window, keys.moveUp) == GLFW_PRESS;
+		bool isDown = glfwGetKey(window, keys.moveDown) == GLFW_PRESS;
 
-		glm::vec2 moveDir {0.f};
+		uint8_t moveFlag{};
+		int dx = 0, dy = 0;
 
-		if (isLeftPressed && !wasLeftPressed) moveDir.x -= 1.f;
-		if (isRightPressed && !wasRightPressed) moveDir.x += 1.f;
-		if (isUpPressed && !wasUpPressed) moveDir.y -= 1.f;
-		if (isDownPressed && !wasDownPressed) moveDir.y += 1.f;
+		if (isLeft && !wasLeftPressed) { dx = -1; moveFlag |= 1; }
+		if (isRight && !wasRightPressed) { dx = 1;  moveFlag |= 2; }
+		if (isUp && !wasUpPressed) { dy = -1; moveFlag |= 4; }
+		if (isDown && !wasDownPressed) { dy = 1;  moveFlag |= 8; }
 
-		wasLeftPressed = isLeftPressed;
-		wasRightPressed = isRightPressed;
-		wasUpPressed = isUpPressed;
-		wasDownPressed = isDownPressed;
+		// 즉시 업데이트
+		wasLeftPressed = isLeft;
+		wasRightPressed = isRight;
+		wasUpPressed = isUp;
+		wasDownPressed = isDown;
 
-		if (moveDir.x != 0.f || moveDir.y != 0.f) {
+		if (dx != 0.f || dy != 0.f) {
 			for(auto const& entity : mEntities) {
+				auto& gridPos = coordinator.GetComponent<GridPositionComponent>(entity);
 				auto& transform = coordinator.GetComponent<Transform2dComponent>(entity);
+				
+				int nextX = gridPos.x + dx;
+				int nextY = gridPos.y + dy;
 
-				transform.translation.x += moveDir.x * stepX;
-				transform.translation.y += moveDir.y * stepY;
+				if (nextX >= 0 && nextX < chessBoard->GetBoardSize() && nextY >= 0 && nextY < chessBoard->GetBoardSize()) {
+					gridPos.x = nextX;
+					gridPos.y = nextY;
 
-				// Limit boundary to the exact 8x8 chessboard
-				float maxBoundX = 3.5f * stepX;
-				float maxBoundY = 3.5f * stepY;
+					// 7. 시각적 위치 업데이트
+					transform.translation = chessBoard->getTilePosition(gridPos.x, gridPos.y);
 
-				transform.translation.x = glm::clamp(transform.translation.x, -maxBoundX, maxBoundX);
-				transform.translation.y = glm::clamp(transform.translation.y, -maxBoundY, maxBoundY);
+					// TODO: 네트워크 서버가 있다면 여기서 moveFlag 전송
+				}
 			}
 		}
 	}

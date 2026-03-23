@@ -8,6 +8,7 @@
 
 namespace lve
 {
+	// 컴포넌트 추가시 coordinator에 컴포넌트 등록할것
 	struct Transform2dComponent {
 		glm::vec2 translation{};
 		glm::vec2 scale{ 1.f, 1.f };
@@ -21,5 +22,10 @@ namespace lve
 
 	struct PlayerInputComponent {
 		bool isPlayer = true;
+	};
+
+	struct GridPositionComponent {
+		int x;
+		int y;
 	};
 }

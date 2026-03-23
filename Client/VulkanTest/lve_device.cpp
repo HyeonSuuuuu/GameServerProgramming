@@ -1,10 +1,5 @@
+#include "pch.h"
 #include "lve_device.hpp"
-
-// std headers
-#include <cstring>
-#include <iostream>
-#include <set>
-#include <unordered_set>
 
 namespace lve {
 

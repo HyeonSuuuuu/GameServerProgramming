@@ -5,9 +5,11 @@
 #include "lve_device.hpp"
 #include "lve_model.hpp"
 #include "lve_renderer.hpp"
+#include "Board.hpp"
 
 #include <memory>
 #include <vector>
+
 
 namespace lve
 {
@@ -35,5 +37,6 @@ namespace lve
 		Coordinator coordinator;
 		std::shared_ptr<class SimpleRenderSystem> simpleRenderSystem;
 		std::shared_ptr<class KeyboardMovementController> playerController;
+		std::unique_ptr<Board> chessBoard;
 	};
 }

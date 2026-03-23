@@ -19,6 +19,9 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{8506b890-e72b-499a-9a8e-1798c38127ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{fe4d7db4-a030-4bda-9e93-95a442128728}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -51,6 +54,7 @@
     <ClCompile Include="keyboard_movement_controller.cpp">
       <Filter>Systems</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chess_app.hpp">
@@ -88,6 +92,13 @@
     </ClInclude>
     <ClInclude Include="lve_utils.hpp">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Board.hpp">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Network.hpp">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

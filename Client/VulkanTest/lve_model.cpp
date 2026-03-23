@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "lve_model.hpp"
-
-#include <cassert>
 
 namespace lve
 {
@@ -70,5 +69,7 @@ namespace lve
 		attributeDescriptions[1].offset = offsetof(Vertex, color);
 		return attributeDescriptions;
 	}
+
+	
 }
 

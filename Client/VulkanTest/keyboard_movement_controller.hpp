@@ -1,8 +1,9 @@
 #pragma once
-
 #include "lve_components.hpp"
 #include "lve_window.hpp"
 
+
+class Board;
 namespace lve 
 {
 	class KeyboardMovementController : public System {
@@ -15,7 +16,7 @@ namespace lve
 		};
 
 		void moveInPlaneXY(GLFWwindow* window, float dt, Coordinator& coordinator);
-		void moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, float stepX, float stepY);
+		void moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard);
 
 		KeyMappings keys{};
 		float moveSpeed{ 3.f };

@@ -1,14 +1,5 @@
-
+#include "pch.h"
 #include "simple_render_system.hpp"
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <GLM/gtc/constants.hpp>
-
-#include <array>
-#include <stdexcept>
-#include <iostream>
 
 namespace lve
 {
