@@ -22,6 +22,9 @@
     <Filter Include="Network">
       <UniqueIdentifier>{fe4d7db4-a030-4bda-9e93-95a442128728}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{cb94d043-2f59-4434-a768-c46e0d5a1bcf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -55,6 +58,12 @@
       <Filter>Systems</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Network.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chess_app.hpp">
@@ -99,6 +108,12 @@
     </ClInclude>
     <ClInclude Include="Network.hpp">
       <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\Protocol.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>App</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

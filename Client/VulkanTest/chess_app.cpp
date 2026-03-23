@@ -49,7 +49,8 @@ namespace lve
 			// 플레이어 엔티티(마커가 있는 엔티티) 이동
 			float tileStepY = 2.0f / 8.0f;
 			float tileStepX = tileStepY * (static_cast<float>(HEIGHT) / WIDTH);
-			playerController->moveDiscreteXY(lveWindow.getGLFWwindow(), coordinator, chessBoard.get());
+			playerController->processPlayerInput(lveWindow.getGLFWwindow(), coordinator, chessBoard.get());
+			playerController->setServerPosition(coordinator, g_x.load(), g_y.load());
 
 			if (auto commandBuffer = lveRenderer.beginFrame())
 			{

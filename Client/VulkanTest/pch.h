@@ -4,10 +4,16 @@
 // core
 
 
+// network
+#include <winSock2.h>
+#pragma comment(lib, "ws2_32.lib")
+#include <ws2tcpip.h>
+
 // libs
+
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 #include <glm/glm.hpp>
 #include <GLM/gtc/constants.hpp>
 
@@ -26,3 +32,9 @@
 #include <cassert>
 #include <unordered_set>
 #include <chrono>
+#include <print>
+#include <thread>
+#include <atomic>
+#include <print>
+#include <mutex>
+#include <queue>

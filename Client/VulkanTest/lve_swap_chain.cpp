@@ -106,6 +106,9 @@ VkResult LveSwapChain::submitCommandBuffers(
     throw std::runtime_error("failed to submit draw command buffer!");
   }
 
+  // 오류나서 임시로 추가 
+  vkQueueWaitIdle(device.graphicsQueue());
+
   VkPresentInfoKHR presentInfo = {};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 

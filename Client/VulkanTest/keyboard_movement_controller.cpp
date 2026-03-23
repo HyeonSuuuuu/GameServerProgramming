@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "keyboard_movement_controller.hpp"
 #include "Board.hpp"
+#include "Global.h"
 
 namespace lve {
 	void KeyboardMovementController::moveInPlaneXY(GLFWwindow* window, float dt, Coordinator& coordinator)
@@ -25,20 +26,19 @@ namespace lve {
 		}
 	}
 
-	void KeyboardMovementController::moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard)
+	void KeyboardMovementController::processPlayerInput(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard)
 	{
 		bool isLeft = glfwGetKey(window, keys.moveLeft) == GLFW_PRESS;
 		bool isRight = glfwGetKey(window, keys.moveRight) == GLFW_PRESS;
 		bool isUp = glfwGetKey(window, keys.moveUp) == GLFW_PRESS;
 		bool isDown = glfwGetKey(window, keys.moveDown) == GLFW_PRESS;
 
-		uint8_t moveFlag{};
-		int dx = 0, dy = 0;
 
-		if (isLeft && !wasLeftPressed) { dx = -1; moveFlag |= 1; }
-		if (isRight && !wasRightPressed) { dx = 1;  moveFlag |= 2; }
-		if (isUp && !wasUpPressed) { dy = -1; moveFlag |= 4; }
-		if (isDown && !wasDownPressed) { dy = 1;  moveFlag |= 8; }
+		uint8_t direction = 0;
+		if (isLeft && !wasLeftPressed) { direction |= 1; }
+		if (isRight && !wasRightPressed) {  direction |= 2; }
+		if (isUp && !wasUpPressed) { direction |= 4; }
+		if (isDown && !wasDownPressed) { direction |= 8; }
 
 		// 즉시 업데이트
 		wasLeftPressed = isLeft;
@@ -46,24 +46,26 @@ namespace lve {
 		wasUpPressed = isUp;
 		wasDownPressed = isDown;
 
-		if (dx != 0.f || dy != 0.f) {
-			for(auto const& entity : mEntities) {
-				auto& gridPos = coordinator.GetComponent<GridPositionComponent>(entity);
-				auto& transform = coordinator.GetComponent<Transform2dComponent>(entity);
+		if (direction != 0) {
+			g_moveFlag.fetch_or(direction);
+		}
+
+		for(auto const& entity : mEntities) {
+			auto& transform = coordinator.GetComponent<Transform2dComponent>(entity);
+			auto& gridPos = coordinator.GetComponent<GridPositionComponent>(entity);
+
+			transform.translation = chessBoard->getTilePosition(gridPos.x, gridPos.y);
 				
-				int nextX = gridPos.x + dx;
-				int nextY = gridPos.y + dy;
+		}
 
-				if (nextX >= 0 && nextX < chessBoard->GetBoardSize() && nextY >= 0 && nextY < chessBoard->GetBoardSize()) {
-					gridPos.x = nextX;
-					gridPos.y = nextY;
+	}
+	void KeyboardMovementController::setServerPosition(Coordinator& coordinator, int x, int y)
+	{
+		for (auto const& entity : mEntities) {
+			auto& gridPos = coordinator.GetComponent<GridPositionComponent>(entity);
 
-					// 7. 시각적 위치 업데이트
-					transform.translation = chessBoard->getTilePosition(gridPos.x, gridPos.y);
-
-					// TODO: 네트워크 서버가 있다면 여기서 moveFlag 전송
-				}
-			}
+			gridPos.x = x;
+			gridPos.y = y;
 		}
 	}
 }

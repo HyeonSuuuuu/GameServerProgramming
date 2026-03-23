@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="chess_app.cpp" />
+    <ClCompile Include="Global.cpp" />
     <ClCompile Include="keyboard_movement_controller.cpp" />
     <ClCompile Include="lve_model.cpp" />
     <ClCompile Include="lve_pipeline.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="lve_device.cpp" />
     <ClCompile Include="lve_swap_chain.cpp" />
+    <ClCompile Include="Network.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -155,8 +157,10 @@
     <ClCompile Include="simple_render_system.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Common\Protocol.h" />
     <ClInclude Include="Board.hpp" />
     <ClInclude Include="chess_app.hpp" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="keyboard_movement_controller.hpp" />
     <ClInclude Include="lve_components.hpp" />
     <ClInclude Include="lve_ecs.hpp" />

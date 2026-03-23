@@ -3,14 +3,29 @@
 
 
 
-const char* SERVER_IP = "127.0.0.1";
-constexpr short SERVER_PORT = 3000;
+inline const char* SERVER_IP = "127.0.0.1";
+constexpr uint16_t SERVER_PORT = 3000;
 //constexpr int BUFFER_SIZE = 4096;
 
+// Packet
+#pragma pack(push, 1)
+struct CS_MovePkt
+{
+	uint8_t moveFlag;
+};
+constexpr uint16_t CS_MOVE_PKT_SIZE = sizeof(CS_MovePkt);
+
+struct SC_MovePkt
+{
+	int8_t x;
+	int8_t y;
+};
+constexpr uint16_t SC_MOVE_PKT_SIZE = sizeof(SC_MovePkt);
+#pragma pack()
 
 // error
 
-void error_display(const wchar_t* msg, int err_no)
+inline void error_display(const wchar_t* msg, int err_no)
 {
 	WCHAR* lpMsgBuf;
 	FormatMessage(

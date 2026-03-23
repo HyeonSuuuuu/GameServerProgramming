@@ -1,6 +1,7 @@
 #pragma once
 #include "lve_components.hpp"
 #include "lve_window.hpp"
+#include "Global.h"
 
 
 class Board;
@@ -16,7 +17,8 @@ namespace lve
 		};
 
 		void moveInPlaneXY(GLFWwindow* window, float dt, Coordinator& coordinator);
-		void moveDiscreteXY(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard);
+		void processPlayerInput(GLFWwindow* window, Coordinator& coordinator, Board* chessBoard);
+		void setServerPosition(Coordinator& coordinator, int x, int y);
 
 		KeyMappings keys{};
 		float moveSpeed{ 3.f };
