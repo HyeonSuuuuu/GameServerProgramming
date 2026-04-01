@@ -6,7 +6,7 @@
 #include "lve_model.hpp"
 #include "lve_renderer.hpp"
 #include "Board.hpp"
-
+#include "Network.hpp"
 #include <memory>
 #include <vector>
 
@@ -34,9 +34,17 @@ namespace lve
 		LveDevice lveDevice{ lveWindow };
 		LveRenderer lveRenderer{ lveWindow, lveDevice };
 
-		Coordinator coordinator;
 		std::shared_ptr<class SimpleRenderSystem> simpleRenderSystem;
 		std::shared_ptr<class KeyboardMovementController> playerController;
 		std::unique_ptr<Board> chessBoard;
+		Networker networker;
+		Coordinator coordinator;
+
 	};
+
+	namespace
+	{
+		std::shared_ptr<LveModel> createSquareModel(LveDevice& device, glm::vec2 offset = { 0.f, 0.f });
+		std::shared_ptr<LveModel> createpawnModel(LveDevice& device, glm::vec2 offset = { 0.f, 0.f });
+	}
 }

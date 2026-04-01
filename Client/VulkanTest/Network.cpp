@@ -1,96 +1,90 @@
 #include "pch.h"
 #include "Network.hpp"
 #include "Global.h"
-
-
+#include "lve_ecs.hpp"
+#include "lve_utils.hpp"
+#include "lve_components.hpp"
 
 #include "../../../Common/Protocol.h"
 
 
-void Networker::Run()
+void Networker::Run(lve::Coordinator& coordinator)
 {
-	int result{};
+	if (g_moveFlag != 0)
+	{
+		CS_MovePkt movePkt;
+		movePkt.moveFlag = g_moveFlag;
 
-	// 시작위치 받기
+		WSABUF wsaBuf;
+		wsaBuf.buf = reinterpret_cast<char*>(&movePkt);
+		wsaBuf.len = CS_MOVE_PKT_SIZE;
+
+		DWORD sentSize{};
+		int result = WSASend(m_socket, &wsaBuf, 1, &sentSize, 0, nullptr, nullptr);
+		if (result == SOCKET_ERROR)
+		{
+			int err = WSAGetLastError();
+			if (err != WSAEWOULDBLOCK)
+			{
+				error_display(L"데이터 전송 실패", err);
+				exit(1);
+			}
+		}
+		g_moveFlag = 0;
+	}
+
+	//Recv
 	WSABUF recvWsaBuf;
 	SC_MovePkt recvMovePkt;
 	recvWsaBuf.buf = reinterpret_cast<char*>(&recvMovePkt);
 	recvWsaBuf.len = SC_MOVE_PKT_SIZE;
 	DWORD recvSize{};
 	DWORD recvFlag{};
-	result = WSARecv(m_socket, &recvWsaBuf, 1, &recvSize, &recvFlag, nullptr, nullptr);
+	int result = WSARecv(m_socket, &recvWsaBuf, 1, &recvSize, &recvFlag, nullptr, nullptr);
 	if (result == SOCKET_ERROR)
 	{
-		error_display(L"recv 실패", WSAGetLastError());
-		return;
+		int err = WSAGetLastError();
+		if (err == WSAEWOULDBLOCK)
+		{
+			return;
+		}
+		error_display(L"recv 실패", err);
+		exit(1);
 	}
 	if (recvSize > 0)
 	{
-		std::println("데이터 받음: x:{} y:{}", recvMovePkt.x, recvMovePkt.y);
+		std::println("데이터 받음id:{}: x:{} y:{}",recvMovePkt.id, recvMovePkt.x, recvMovePkt.y);
 	}
 	else
 	{
 		std::println("서버의 연결이 종료되었습니다.");
-		return;
+		exit(1);
 	}
+
 	// 처리
-	g_x.store(recvMovePkt.x);
-	g_y.store(recvMovePkt.y);
-	// 잘안찍히면 이벤트로 동기화
-
-	while (m_isRunning.load())
+	auto id = recvMovePkt.id;
+	g_myId = id;
+	if (g_clients.contains(id) == false)
+	{ // 새로운 클라이언트
+		g_clients.try_emplace(id, id, recvMovePkt.x, recvMovePkt.y);
+		m_enterQueue.push(id);
+	}
+	else
 	{
-		uint8_t currentFlag = g_moveFlag.exchange(0);
-		if (currentFlag != 0)
-		{
-			CS_MovePkt movePkt;
-			movePkt.moveFlag = currentFlag;
-
-			WSABUF wsaBuf;
-			wsaBuf.buf = reinterpret_cast<char*>(&movePkt);
-			wsaBuf.len = CS_MOVE_PKT_SIZE;
-
-			DWORD sentSize{};
-			result = WSASend(m_socket, &wsaBuf, 1, &sentSize, 0, nullptr, nullptr);
-			if (result == SOCKET_ERROR)
-			{
-				error_display(L"데이터 전송 실패", WSAGetLastError());
-			}
-
-			//Recv
-			WSABUF recvWsaBuf;
-			SC_MovePkt recvMovePkt;
-			recvWsaBuf.buf = reinterpret_cast<char*>(&recvMovePkt);
-			recvWsaBuf.len = SC_MOVE_PKT_SIZE;
-			DWORD recvSize{};
-			DWORD recvFlag{};
-			result = WSARecv(m_socket, &recvWsaBuf, 1, &recvSize, &recvFlag, nullptr, nullptr);
-			if (result == SOCKET_ERROR)
-			{
-				error_display(L"recv 실패", WSAGetLastError());
-				break;
-			}
-			if (recvSize > 0)
-			{
-				std::println("데이터 받음: x:{} y:{}", recvMovePkt.x, recvMovePkt.y);
-			}
-			else
-			{
-				std::println("서버의 연결이 종료되었습니다.");
-				break;
-			}
-			// 처리
-			g_x.store(recvMovePkt.x);
-			g_y.store(recvMovePkt.y);
+		if (recvMovePkt.x == -1 && recvMovePkt.y == -1)
+		{ 
+			// 클라이언트 퇴장
+			g_clients.erase(id);
+			m_leaveQueue.push(id);
+			return;
 		}
-		
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		g_clients[id].x = recvMovePkt.x;
+		g_clients[id].y = recvMovePkt.y;
 	}
 }
 
 Networker::~Networker()
 {
-	Stop();
 	WSACleanup();
 }
 
@@ -146,29 +140,49 @@ bool Networker::Connect(const char* ip, uint16_t port)
 		error_display(L"서버 연결 실패", WSAGetLastError());
 		return false;
 	}
+
+
+	// 시작위치 받기
+	WSABUF recvWsaBuf;
+	SC_MovePkt recvMovePkt;
+	recvWsaBuf.buf = reinterpret_cast<char*>(&recvMovePkt);
+	recvWsaBuf.len = SC_MOVE_PKT_SIZE;
+	DWORD recvSize{};
+	DWORD recvFlag{};
+	result = WSARecv(m_socket, &recvWsaBuf, 1, &recvSize, &recvFlag, nullptr, nullptr);
+	if (result == SOCKET_ERROR)
+	{
+		error_display(L"recv 실패", WSAGetLastError());
+		return false;
+	}
+	if (recvSize > 0)
+	{
+		std::println("데이터 받음id:{}: x:{} y:{}", recvMovePkt.id, recvMovePkt.x, recvMovePkt.y);
+	}
+	else
+	{
+		std::println("서버의 연결이 종료되었습니다.");
+		return false;
+	}
+	// 처리
+	auto id = recvMovePkt.id;
+	g_myId = id;
+	if (g_clients.contains(id) == false)
+	{
+		g_clients.try_emplace(id, id, recvMovePkt.x, recvMovePkt.y);
+	}
+	else
+	{
+		g_clients[id].x = recvMovePkt.x;
+		g_clients[id].y = recvMovePkt.y;
+	}
+
+	// 논블로킹 전환
+	unsigned long mode = 1; // 1: 논블로킹, 0: 블로킹
+	if (ioctlsocket(m_socket, FIONBIO, &mode) == SOCKET_ERROR) {
+		error_display(L"ioctlsocket 실패", WSAGetLastError());
+		return false;
+	}
 	return true;
 }
-
-void Networker::Start()
-{
-	m_isRunning.store(true);
-	m_thread = std::thread([this]() {
-		Run();
-		});
-	return;
-}
-
-void Networker::Stop()
-{
-	m_isRunning.store(false);
-
-	if (m_socket != INVALID_SOCKET) {
-		closesocket(m_socket);
-		m_socket = INVALID_SOCKET;
-	}
-	
-	if (m_thread.joinable())
-		m_thread.join();
-}
-
 

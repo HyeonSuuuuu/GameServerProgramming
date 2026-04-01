@@ -27,7 +27,7 @@ public:
 
     ~Board()
     {
-        destroyBoard();
+        //destroyBoard();
     }
 
     // 특정 칸의 월드 좌표 가져오기

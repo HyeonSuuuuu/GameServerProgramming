@@ -1,14 +1,15 @@
 
 
+inline constexpr const char* SERVER_IP = "127.0.0.1";
+inline constexpr uint16_t SERVER_PORT = 3000;
 
+constexpr int MAX_PLAYERS = 255;
 
-
-inline const char* SERVER_IP = "127.0.0.1";
-constexpr uint16_t SERVER_PORT = 3000;
 //constexpr int BUFFER_SIZE = 4096;
 
 // Packet
 #pragma pack(push, 1)
+
 struct CS_MovePkt
 {
 	uint8_t moveFlag;
@@ -17,6 +18,7 @@ constexpr uint16_t CS_MOVE_PKT_SIZE = sizeof(CS_MovePkt);
 
 struct SC_MovePkt
 {
+	uint8_t id;
 	int8_t x;
 	int8_t y;
 };

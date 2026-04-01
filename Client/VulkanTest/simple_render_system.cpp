@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "simple_render_system.hpp"
+#include <filesystem>
 
 namespace lve
 {
@@ -40,10 +41,42 @@ namespace lve
 
 		pipelineConfig.renderPass = renderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
+
+		// 파일 찾기
+		std::vector<std::string> vertPaths = {
+			"shaders/simple_shader.vert.spv",          // MSVC 빌드시
+			"../../VulkanTest/shaders/simple_shader.vert.spv",       // 바이너리 실행시
+			"simple_shader.vert.spv"     // 바이너리 실행시
+		};
+
+		std::vector<std::string> fragPaths = {
+			"shaders/simple_shader.frag.spv",
+			"../../VulkanTest/shaders/simple_shader.frag.spv",
+			"simple_shader.frag.spv" 
+		};
+		std::string finalVertPath = "";
+		std::string finalFragPath = "";
+		for (const auto& path : vertPaths) {
+			if (std::filesystem::exists(path)) {
+				finalVertPath = path;
+				break;
+			}
+		}
+
+		for (const auto& path : fragPaths) {
+			if (std::filesystem::exists(path)) {
+				finalFragPath = path;
+				break;
+			}
+		}
+		if (finalVertPath.empty() || finalFragPath.empty()) {
+			throw std::runtime_error("쉐이더 파일을 찾을 수 없습니다! 경로를 확인하세요.");
+		}
+
 		lvePipeline = std::make_unique<LvePipeline>(
 			lveDevice,
-			"shaders/simple_shader.vert.spv",
-			"shaders/simple_shader.frag.spv",
+			finalVertPath,
+			finalFragPath,
 			pipelineConfig);
 	}
 

@@ -4,9 +4,9 @@
 
 
 // atomic한 moveflag
-std::atomic<uint8_t> g_moveFlag{};
+uint8_t g_moveFlag{};
 
+std::unordered_map<uint8_t, PlayerInfo> g_clients;
+std::unordered_map<uint8_t, lve::Entity> g_idToEntity;
 
-// x, y 그냥 global로?
-std::atomic<int8_t> g_x{};
-std::atomic<int8_t> g_y{};
+uint8_t g_myId{};

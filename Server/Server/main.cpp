@@ -1,21 +1,16 @@
-#include <iostream>
-#include <ws2tcpip.h>
-#include <print>
-#pragma comment(lib, "ws2_32.lib")
-
-#include "../../Common/Protocol.h"
+#include "pch.h"
+#include "Session.h"
+#include "Global.h"
 
 
-
-struct Pawn
-{
-	int8_t x; int8_t y;
-};
-
-Pawn pawn{ 4, 0 };
 
 int main()
 {
+	// random init
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dis(0, 7);
+
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int result;
@@ -35,7 +30,7 @@ int main()
 		return 1;
 	}
 
-	SOCKET listenSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
+	SOCKET listenSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
 	if (listenSock == INVALID_SOCKET)
 	{
 		error_display(L"listenSock = WSASocket()", WSAGetLastError());
@@ -60,83 +55,45 @@ int main()
 		WSACleanup();
 		return 1;
 	}
-	std::print("listen...");
+	std::println("listen...");
 
-	int32_t addrLen = sizeof(serverAddr);
-	SOCKET clientSock = WSAAccept(listenSock, reinterpret_cast<SOCKADDR*>(&serverAddr), &addrLen, nullptr, 0);
-	std::println("클라이언트 연결 성공");
-
-	// 초기위치 send
-	SC_MovePkt sendMovePkt{ pawn.x, pawn.y };
-
-	WSABUF sendWsaBuf;
-	sendWsaBuf.buf = reinterpret_cast<char*>(&sendMovePkt);
-	sendWsaBuf.len = SC_MOVE_PKT_SIZE;
-
-	DWORD sentSize{};
-	result = WSASend(clientSock, &sendWsaBuf, 1, &sentSize, 0, nullptr, nullptr);
-	if (result == SOCKET_ERROR)
+	SOCKADDR_IN clientAddr;
+	int32_t addrLen = sizeof(clientAddr);
+	bool isRunning = true;
+	uint8_t clientCnt = 0;
+	while (isRunning)
 	{
-		error_display(L"데이터 전송 실패", WSAGetLastError());
+		SOCKET clientSock = WSAAccept(listenSock, reinterpret_cast<SOCKADDR*>(&clientAddr), &addrLen, nullptr, 0);
+		std::println("클라이언트 연결 성공({})", clientCnt);
+
+		auto [it, result] = g_clients.try_emplace(static_cast<uint8_t>(clientCnt), clientCnt, clientSock);
+		auto& client = it->second;
+		if (result == true)
+		{
+			client.x = dis(gen);
+			client.y = dis(gen);
+			// 초기위치 broadcast
+			for (auto& [id, session] : g_clients)
+			{
+				session.DoSend(clientCnt, client.x, client.y);
+
+				// 다른 사람 위치도 보내주기
+				if (id == clientCnt)
+				{
+					for (auto& [otherId, otherSession] : g_clients)
+					{
+						if (otherId == clientCnt)
+							continue;
+						client.DoSend(otherId, otherSession.x, otherSession.y);
+					}
+				}
+			}
+		}
+
+		client.DoRecv();
+		clientCnt++;
 	}
 
-	while (1)
-	{
-		// 입력값 Recv
-		WSABUF wsaBuf;
-		CS_MovePkt movePkt;
-		wsaBuf.buf = reinterpret_cast<char*>(&movePkt);
-		wsaBuf.len = CS_MOVE_PKT_SIZE;
-		DWORD recvSize{};
-		DWORD recvFlag{};
-		result = WSARecv(clientSock, &wsaBuf, 1, &recvSize, &recvFlag, nullptr, nullptr);
-		if (result == SOCKET_ERROR)
-		{
-			error_display(L"recv 실패", WSAGetLastError());
-			break;
-		}
-		if (recvSize > 0)
-		{
-			std::println("데이터 받음: {}", movePkt.moveFlag);
-		}
-		else
-		{
-			std::println("클라이언트의 연결이 종료되었습니다.");
-			break;
-		}
-		// 계산 a:1 d:2 w:4 s:8
-		if (movePkt.moveFlag & 1) pawn.x -= 1;
-		if (movePkt.moveFlag & 2) pawn.x += 1;
-		if (movePkt.moveFlag & 4) pawn.y -= 1;
-		if (movePkt.moveFlag & 8) pawn.y += 1;
-
-		if (pawn.x < 0)
-			pawn.x = 0;
-		if (pawn.x > 7)
-			pawn.x = 7;
-		if (pawn.y < 0)
-			pawn.y = 0;
-		if (pawn.y > 7)
-			pawn.y = 7;
-
-		// Send
-		SC_MovePkt sendMovePkt{ pawn.x, pawn.y };
-
-		WSABUF sendWsaBuf;
-		sendWsaBuf.buf = reinterpret_cast<char*>(&sendMovePkt);
-		sendWsaBuf.len = SC_MOVE_PKT_SIZE;
-
-		DWORD sentSize{};
-		result = WSASend(clientSock, &sendWsaBuf, 1, &sentSize, 0, nullptr, nullptr);
-		if (result == SOCKET_ERROR)
-		{
-			error_display(L"데이터 전송 실패", WSAGetLastError());
-		}
-	}
-
-
-
-	closesocket(clientSock);
 	closesocket(listenSock);
 	WSACleanup();
 	return 0;

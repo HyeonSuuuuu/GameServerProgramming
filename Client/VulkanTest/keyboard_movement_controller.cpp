@@ -47,7 +47,7 @@ namespace lve {
 		wasDownPressed = isDown;
 
 		if (direction != 0) {
-			g_moveFlag.fetch_or(direction);
+			g_moveFlag |= direction;
 		}
 
 		for(auto const& entity : mEntities) {
