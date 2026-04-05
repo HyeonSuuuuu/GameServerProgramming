@@ -3,21 +3,10 @@
 #include "NetDefine.h"
 #include"Global.h"
 
-
-EXP_OVER::EXP_OVER(uint8_t client_id, int x, int y)
-	: m_id{ client_id }
-{
-	m_movePkt.id = static_cast<uint8_t>(client_id);
-	m_movePkt.x = x;
-	m_movePkt.y = y;
-}
-
 Session::Session(uint8_t id, SOCKET s)
 	: m_id{ id }
 	, m_socket{ s }
 {
-	m_recvWsaBuf.len = SC_MOVE_PKT_SIZE;
-	m_recvWsaBuf.buf = reinterpret_cast<char*>(&m_recvMovePkt);
 }
 
 Session::~Session()

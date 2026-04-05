@@ -55,45 +55,62 @@ int main()
 		WSACleanup();
 		return 1;
 	}
+	HANDLE h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0); // IOCP 생성
+	CreateIoCompletionPort((HANDLE)listenSock, h_iocp, -1, 0); // lstenSocket 등록
+	
 	std::println("listen...");
 
-	SOCKADDR_IN clientAddr;
-	int32_t addrLen = sizeof(clientAddr);
-	bool isRunning = true;
-	uint8_t clientCnt = 0;
-	while (isRunning)
+	SOCKET clientSock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+	EXP_OVER acceptOver(IO_ACCEPT);
+	if (AcceptEx(listenSock, clientSock, &acceptOver.m_buff, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, nullptr, &acceptOver.m_over) == false)
 	{
-		SOCKET clientSock = WSAAccept(listenSock, reinterpret_cast<SOCKADDR*>(&clientAddr), &addrLen, nullptr, 0);
-		std::println("클라이언트 연결 성공({})", clientCnt);
-
-		auto [it, result] = g_clients.try_emplace(static_cast<uint8_t>(clientCnt), clientCnt, clientSock);
-		auto& client = it->second;
-		if (result == true)
+		int errCode = WSAGetLastError();
+		if (errCode != ERROR_IO_PENDING)
 		{
-			client.x = dis(gen);
-			client.y = dis(gen);
-			// 초기위치 broadcast
-			for (auto& [id, session] : g_clients)
-			{
-				session.DoSend(clientCnt, client.x, client.y);
-
-				// 다른 사람 위치도 보내주기
-				if (id == clientCnt)
-				{
-					for (auto& [otherId, otherSession] : g_clients)
-					{
-						if (otherId == clientCnt)
-							continue;
-						client.DoSend(otherId, otherSession.x, otherSession.y);
-					}
-				}
-			}
+			error_display(L"AcceptEx failed", errCode);
+			return 1;
 		}
-
-		client.DoRecv();
-		clientCnt++;
 	}
 
+
+	bool isRunning = true;
+	uint8_t playerIndex = 0;
+	while (isRunning)
+	{
+		DWORD numBytes;
+		ULONG_PTR key;
+		LPOVERLAPPED over;
+		GetQueuedCompletionStatus(h_iocp, &numBytes, &key, &over, INFINITE);
+		if (over == nullptr)
+		{
+			error_display(L"GQCS Error: ", WSAGetLastError());
+			if (key == -1)
+			{
+				exit(-1);
+			}
+			std::cout << "client[" << key << "] Disconnected.\n";
+			g_clients[key].IsConnected() = false;
+			for (auto& [id, client] : g_clients)
+				if (client.IsConnected())
+					client.SendRemovePlayer(key);
+			continue;
+		}
+		EXP_OVER* expOver = reinterpret_cast<EXP_OVER*>(over);
+		switch (expOver->m_iotype)
+		{
+		case IO_ACCEPT:
+			break;
+		case IO_RECV:
+			break;
+		case IO_SEND:
+			break;
+		default:
+			std::println("Unknown IO type");
+			exit(-1);
+			break;
+		}
+	}
 	closesocket(listenSock);
 	WSACleanup();
 	return 0;
